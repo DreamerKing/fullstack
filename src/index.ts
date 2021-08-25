@@ -1,4 +1,5 @@
 import "reflect-metadata";
+import path from "path";
 import { MikroORM } from "@mikro-orm/core";
 import express from "express";
 import { ApolloServer } from "apollo-server-express";
@@ -29,8 +30,11 @@ const main = async () => {
     password: "794838927",
     logging: true,
     synchronize: false,
+    // migrations: [ path.join(__dirname, './migrations/1627815485205-FakePosts.ts')],
     entities: [Post, User],
   });
+
+  // await conn.runMigrations();
 
   // await Post.delete({});
   // const orm = await MikroORM.init(OrmConfig);

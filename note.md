@@ -6,3 +6,5 @@ yarn add -D @types/express
 
 
 yarn add reflect-metadata
+
+npx typeorm migration:create -n FakePosts

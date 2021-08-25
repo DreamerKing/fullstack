@@ -6,8 +6,11 @@ import {
   Arg,
   Int,
   InputType,
+  ObjectType,
   Field,
   UseMiddleware,
+  FieldResolver,
+  Root,
 } from "type-graphql";
 import { Post } from "../entites/Post";
 
@@ -15,6 +18,7 @@ import { MyContext } from "../types";
 import { sleep } from "../utils/sleep";
 import { isAuth } from "../middleware/isAuth";
 import { getConnection } from "typeorm";
+// import { PostgreSqlConnection } from "@mikro-orm/postgresql";
 
 @InputType()
 class PostInput {
@@ -24,23 +28,45 @@ class PostInput {
   text: string;
 }
 
-@Resolver()
+@ObjectType()
+class PaginatedPosts {
+  @Field(() => [Post])
+  posts: Post[];
+  @Field()
+  hasMore: boolean;
+}
+
+@Resolver(Post)
 export class PostResolver {
-  @Query(() => [Post])
+  @FieldResolver(() => String)
+  textSnippet(@Root() root: Post) {
+    return root.text.slice(0, 50);
+  }
+
+  @Query(() => PaginatedPosts)
   async posts(
     @Arg("limit", () => Int!) limit: number,
     @Arg("cursor", () => String, { nullable: true }) cursor: string | null
   ): // @Ctx() { em }: MyContext
-  Promise<Post[]> {
+  Promise<PaginatedPosts> {
     // await sleep(1000);
     // return Post.find();
     // return em.find(Post, {});
     const realLimit = Math.min(50, limit);
-    const qb = getConnection().getRepository(Post).createQueryBuilder("p");
+    const realLimitPlusOne = realLimit + 1
+    const qb = getConnection()
+      .getRepository(Post)
+      .createQueryBuilder("p")
+      .orderBy('"createdAt"', "DESC")
+      .take(realLimitPlusOne);
     if (cursor) {
       qb.where('"createdAt" > :cursor', { cursor: new Date(parseInt(cursor)) });
     }
-    return qb.orderBy('"createdAt"', "DESC").take(realLimit).getMany();
+    const posts = await qb.getMany();
+    return {
+      posts: posts.slice(0, realLimit),
+      hasMore: posts.length === realLimitPlusOne
+    };
   }
 
   @Query(() => Post, { nullable: true })
