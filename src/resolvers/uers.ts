@@ -7,6 +7,8 @@ import {
   Query,
   Field,
   ObjectType,
+  Root,
+  FieldResolver,
 } from "type-graphql";
 import argon2 from "argon2";
 import { v4 } from "uuid";
@@ -42,17 +44,25 @@ class FieldError {
 
 @Resolver()
 export class UserResolver {
-  @Query(() => User, { nullable: true })
-  async me(@Ctx() { req }: MyContext) {
-    console.dir(req.session, { depth: Infinity });
-
-    if (!req.session.userId) {
-      return null;
+  @FieldResolver(() => String)
+  email(@Root() user: User, @Ctx() { req }: MyContext) {
+    if (req.session.userId === user.id) {
+      return user.email;
     }
-    // const user = await em.findOne(User, { id: req.session.userId });
-    const user = await User.findOne(parseInt(req.session.userId));
-    return user;
+    return "";
   }
+  // @Query(() => User, { nullable: true }
+  // )
+  // async me(@Ctx() { req }: MyContext) {
+  //   console.dir(req.session, { depth: Infinity });
+
+  //   if (!req.session.userId) {
+  //     return null;
+  //   }
+  //   // const user = await em.findOne(User, { id: req.session.userId });
+  //   const user = await User.findOne(parseInt(req.session.userId));
+  //   return user;
+  // }
 
   @Mutation(() => UserResponse)
   async changePassword(
