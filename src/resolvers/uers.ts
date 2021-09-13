@@ -14,7 +14,6 @@ import argon2 from "argon2";
 import { v4 } from "uuid";
 import { User } from "../entites/User";
 import { COOKIE_NAME } from "../constants";
-import { EntityManager } from "@mikro-orm/mysql";
 import {
   UsernamePasswordInput,
   UsernameOrEmailPasswordInput,
@@ -42,7 +41,7 @@ class FieldError {
   message: string;
 }
 
-@Resolver()
+@Resolver(User)
 export class UserResolver {
   @FieldResolver(() => String)
   email(@Root() user: User, @Ctx() { req }: MyContext) {
@@ -51,18 +50,18 @@ export class UserResolver {
     }
     return "";
   }
-  // @Query(() => User, { nullable: true }
-  // )
-  // async me(@Ctx() { req }: MyContext) {
-  //   console.dir(req.session, { depth: Infinity });
 
-  //   if (!req.session.userId) {
-  //     return null;
-  //   }
-  //   // const user = await em.findOne(User, { id: req.session.userId });
-  //   const user = await User.findOne(parseInt(req.session.userId));
-  //   return user;
-  // }
+  @Query(() => User, { nullable: true })
+  async me(@Ctx() { req }: MyContext) {
+    console.log(req.session);
+
+    if (!req.session.userId) {
+      return null;
+    }
+    // const user = await em.findOne(User, { id: req.session.userId });
+    const user = await User.findOne(parseInt(req.session.userId));
+    return user;
+  }
 
   @Mutation(() => UserResponse)
   async changePassword(
@@ -253,9 +252,11 @@ export class UserResolver {
         ],
       };
     }
-    console.log(user, "user", req.session);
+    console.log(user, "user");
 
     req.session.userId = user.id;
+    console.log(req.session, "session");
+
     return {
       user,
     };

@@ -1,5 +1,3 @@
-// import { Entity, PrimaryKey, Property } from '@mikro-orm/core';
-// import { ManyToOne } from '@mikro-orm/core';
 import { ObjectType, Field, Int } from "type-graphql";
 import {
   Column,
@@ -9,7 +7,9 @@ import {
   Entity,
   BaseEntity,
   ManyToOne,
+  OneToMany,
 } from "typeorm";
+import { Updoot } from "./Updoot";
 
 import { User } from "./User";
 
@@ -17,23 +17,19 @@ import { User } from "./User";
 @Entity()
 export class Post extends BaseEntity {
   @Field(() => Int)
-  // @PrimaryKey()
   @PrimaryGeneratedColumn()
   id!: number;
 
   @Field(() => String)
-  // @Property({ type: 'date' })
   @CreateDateColumn()
   createdAt = new Date();
 
   @Field(() => String)
-  // @Property( { type: 'date', onUpdate: () => new Date() })
   @UpdateDateColumn()
   updatedAt = new Date();
 
   @Field()
   @Column()
-  // @Property({ type: "text"})
   title!: string;
 
   @Field()
@@ -51,4 +47,7 @@ export class Post extends BaseEntity {
   @Field()
   @ManyToOne(() => User, (user) => user.posts)
   creator: User;
+
+  @OneToMany(() => Updoot, (updoot) => updoot.post)
+  updoots: Updoot[];
 }

@@ -17,6 +17,7 @@ import { __prod__, COOKIE_NAME } from "./constants";
 import sendEmail from "./utils/sendEmail";
 import { User } from "./entites/User";
 import { Post } from "./entites/Post";
+import { Updoot } from "./entites/Updoot";
 const PORT = 8888;
 
 // res.header("Access-Control-Allow-Origin", "YOUR-DOMAIN.TLD"); // update to match the domain you will make the request from
@@ -31,7 +32,7 @@ const main = async () => {
     logging: true,
     synchronize: false,
     // migrations: [ path.join(__dirname, './migrations/1627815485205-FakePosts.ts')],
-    entities: [Post, User],
+    entities: [Updoot, Post, User],
   });
 
   // await conn.runMigrations();
@@ -66,7 +67,7 @@ const main = async () => {
         sameSite: "lax", // csrf
         secure: __prod__,
       },
-      saveUninitialized: false,
+      saveUninitialized: true,
       secret: "794838927",
       resave: true,
     })
