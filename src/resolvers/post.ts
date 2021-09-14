@@ -46,13 +46,25 @@ export class PostResolver {
   @Mutation(() => Boolean)
   @UseMiddleware(isAuth)
   async vote(
-    @Arg("userId", () => Int) postId: number,
+    @Arg("postId", () => Int) postId: number,
     @Arg("value", () => Int) value: number,
     @Ctx() { req }: MyContext
   ) {
     const isUpdoot = value !== -1;
     const realValue = isUpdoot ? 1 : -1;
     const { userId } = req.session;
+    const updoot = await Updoot.findOne({ where: { postId, userId } });
+    if (updoot && updoot.value !== realValue) {
+    } else if (!updoot) {
+      await getConnection().transaction(async (tm) => {
+        tm.query(
+          `
+        insert into updoot("userId", "postId", value) values ($1, $2, $3)
+        `,
+          [userId, postId, realValue]
+        );
+      });
+    }
     await Updoot.insert({
       userId,
       postId,
@@ -103,6 +115,8 @@ export class PostResolver {
     if (realLimitPlusOne) {
       qb.limit(realLimitPlusOne);
     }
+    console.log(qb.getSql());
+
     let posts = await qb.getMany();
 
     /* const posts = await getConnection().query(
