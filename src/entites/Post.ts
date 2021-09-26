@@ -40,9 +40,12 @@ export class Post extends BaseEntity {
   @Column()
   creatorId: number;
 
-  @Field()
-  @Column({ type: "int", default: 0 })
-  points!: number;
+  @Field(() => Int, { nullable: true })
+  @Column({ default: 0 })
+  points: number;
+
+  @Field(() => Int, { nullable: true })
+  voteStatus: number | null;
 
   @Field()
   @ManyToOne(() => User, (user) => user.posts)

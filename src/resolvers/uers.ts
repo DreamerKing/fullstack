@@ -52,7 +52,8 @@ export class UserResolver {
   }
 
   @Query(() => User, { nullable: true })
-  async me(@Ctx() { req }: MyContext) {
+  async me(@Ctx() { req, redis }: MyContext) {
+    console.log(req.session.userId, ">>>>");
     console.log(req.session);
 
     if (!req.session.userId) {

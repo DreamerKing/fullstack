@@ -1,0 +1,10 @@
+{
+  "type": "mysql",
+  "host": "localhost",
+  "port": 3306,
+  "username": "king",
+  "password": "794838927",
+  "database": "lireddit2",
+  "entities": ["dist/enties/*.js"],
+  "migrations": ["dist/migrations/*.js"]
+}

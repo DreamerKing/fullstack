@@ -2,6 +2,8 @@
   "name": "fullstack-graphql",
   "scripts": {
     "watch": "tsc -w",
+    "build": "tsc",
+    "gen-env": "npx gen-env-types .env -o src/env.d.ts -e .",
     "start": "node dist/index.js",
     "start2": "ts-node src/index.ts",
     "dev": "nodemon --exec ts-node src/index.ts",
@@ -14,6 +16,7 @@
   "license": "MIT",
   "devDependencies": {
     "@types/connect-redis": "^0.0.17",
+    "@types/cookie-parser": "^1.4.2",
     "@types/cors": "^2.8.12",
     "@types/express": "^4.17.13",
     "@types/express-session": "^1.17.4",
@@ -35,7 +38,10 @@
     "apollo-server-express": "^2.25.2",
     "argon2": "^0.28.2",
     "connect-redis": "^6.0.0",
+    "cookie-parser": "^1.4.5",
     "cors": "^2.8.5",
+    "dataloader": "^2.0.0",
+    "dotenv-safe": "^8.2.0",
     "express": "^4.17.1",
     "express-session": "^1.17.2",
     "graphql": "^15.5.1",

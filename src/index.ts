@@ -1,58 +1,47 @@
 import "reflect-metadata";
-import path from "path";
-import { MikroORM } from "@mikro-orm/core";
 import express from "express";
+import "dotenv-safe/config";
 import { ApolloServer } from "apollo-server-express";
 import { buildSchema } from "type-graphql";
 import cors from "cors";
-import OrmConfig from "./mikro-orm.config";
 import { PostResolver } from "./resolvers/post";
 import { UserResolver } from "./resolvers/uers";
-// import redis from "redis";
 import Redis from "ioredis";
 import { createConnection } from "typeorm";
 import session from "express-session";
 import connectRedis from "connect-redis";
 import { __prod__, COOKIE_NAME } from "./constants";
-import sendEmail from "./utils/sendEmail";
 import { User } from "./entites/User";
 import { Post } from "./entites/Post";
 import { Updoot } from "./entites/Updoot";
-const PORT = 8888;
-
-// res.header("Access-Control-Allow-Origin", "YOUR-DOMAIN.TLD"); // update to match the domain you will make the request from
-//   res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+import { createUserLoader } from "./utils/createUserLoader";
+import { createUpdootLoader } from "./utils/createUpdootLoader";
 
 const main = async () => {
   const conn = await createConnection({
     type: "mysql",
-    database: "lireddit2",
-    username: "root",
-    password: "794838927",
-    logging: true,
-    synchronize: false,
-    // migrations: [ path.join(__dirname, './migrations/1627815485205-FakePosts.ts')],
+    url: process.env.DATABAS_URL,
+    logging: false,
+    synchronize: true,
     entities: [Updoot, Post, User],
   });
 
   // await conn.runMigrations();
+  console.log(process.env.CORS_ORIGIN ?? "".split(","), "origin");
 
-  // await Post.delete({});
-  // const orm = await MikroORM.init(OrmConfig);
-  //   await orm.em.nativeDelete(User, {});
-  //   await orm.getMigrator().up();
   const app = express();
+  // app.set("proxy", 1);
   const RedisStore = connectRedis(session);
-  // const redisClient = redis.createClient();
-  const redis = new Redis({});
-  //   sendEmail("794838927@qq.com", "What are you dong?");
+  const redis = new Redis(process.env.REDIS_URL);
 
   app.use(
     cors({
-      origin: ["http://localhost:3000", "https://studio.apollographql.com"],
+      origin: true,
       credentials: true,
+      methods: ["POST", "OPTIONS"],
     })
   );
+
   app.use(
     session({
       name: COOKIE_NAME,
@@ -62,44 +51,45 @@ const main = async () => {
         disableTouch: true,
       }),
       cookie: {
-        maxAge: 1000 * 60 * 60 * 24 * 365 * 1,
+        maxAge: 1000 * 60 * 60 * 24,
         httpOnly: true,
         sameSite: "lax", // csrf
         secure: __prod__,
+        // domain: ''
       },
-      saveUninitialized: true,
-      secret: "794838927",
-      resave: true,
+      saveUninitialized: false,
+      secret: process.env.SESSION_SECRET as string,
+      resave: false,
+      proxy: true,
     })
   );
+
   const apolloServer = new ApolloServer({
     schema: await buildSchema({
       resolvers: [PostResolver, UserResolver],
       validate: false,
     }),
     context: ({ req, res }) => ({
-      // em: orm.em,
       req,
       res,
       redis,
+      userLoader: createUserLoader(),
+      updootLoader: createUpdootLoader(),
     }),
   });
   apolloServer.applyMiddleware({
     app,
-    cors: false /* { origin: 'http://localhost:3000' } */,
+    cors: {
+      origin: true, // (process.env.CORS_ORIGIN as string).split(","),
+      methods: ["GET", "POST", "OPTIONS"],
+      credentials: true,
+    },
   });
-  //app.get('/', (_req, res) => { res.send('hello express') });
-  app.listen(PORT, () => console.log(`localhost listen on port ${PORT}`));
-  /*  await orm.getMigrator().up();
-    const post = orm.em.create(Post, { title: "My Post", created_at: new Date(), updated_at: new Date });
-    await orm.em.persistAndFlush(post);
-    await orm.em.nativeInsert(Post, { title: "my first post2"}); */
-  // const posts = await orm.em.find(Post, {});
-  // console.log(posts);
+  app.listen(process.env.PORT, () =>
+    console.log(`localhost listen on port ${process.env.PORT}`)
+  );
 };
 
 main().catch((err) => {
   console.error(err);
 });
-
-console.log("Hello graphql");
